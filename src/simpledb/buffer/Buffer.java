@@ -55,7 +55,10 @@ public class Buffer {
 	 * {@link simpledb.server.SimpleDB#initFileAndLogMgr(String)} or
 	 * is called first.
 	 */
-	public Buffer() {}
+	public Buffer() {
+		reads = new AtomicInteger(0);
+		writes = new AtomicInteger(0);
+	}
 
 	/**
 	 * Returns the integer value at the specified offset of the
@@ -101,7 +104,7 @@ public class Buffer {
 		writes.incrementAndGet();
 		modifiedBy = txnum;
 		if (lsn >= 0)
-			logSequenceNumber = lsn;
+			this.logSequenceNumber = lsn;
 		contents.setInt(offset, val);
 	}
 

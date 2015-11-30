@@ -21,6 +21,7 @@ class BasicBufferMgr {
 	}
 
 	private int numAvailable;
+	private int maxBufferSize;
 
 	/**
 	 * Creates a buffer manager having the specified number 
@@ -38,6 +39,7 @@ class BasicBufferMgr {
 	BasicBufferMgr(int numbuffs) {
 		bufferpool = new Buffer[numbuffs];
 		bufferPoolMap = new HashMap<Block, Buffer>(numbuffs);
+		maxBufferSize = numbuffs;
 		numAvailable = numbuffs;
 		for (int i=0; i<numbuffs; i++)
 			bufferpool[i] = new Buffer();
@@ -133,46 +135,56 @@ class BasicBufferMgr {
 	private Buffer chooseUnpinnedBuffer() {
 		// Find the 1st unpinned buffer and return it..
 		Buffer retBuff = null;
-		System.out.println("-----------------------------------------------NUMAVLBLE:"+numAvailable);
-		if(numAvailable > 0){
-			for (Buffer buff : bufferpool)
-				if (!buff.isPinned()){
-					retBuff = buff;
-					break;
-				}
-
+		
+		if(bufferPoolMap.size() < maxBufferSize) {
+			retBuff = bufferpool[bufferPoolMap.size()];
 		}
-		else{
+		else {
 			int leastLsn = 99999999;
 
 			for (Buffer buff : bufferpool)
-				if(!buff.isPinned() && buff.getModifiedBy()!= -1 && buff.getLogSequenceNumber()<leastLsn){
+				if(!buff.isPinned() && buff.getModifiedBy()!= -1 && buff.getLogSequenceNumber()<leastLsn && buff.getLogSequenceNumber()>-1){
 					leastLsn = buff.getLogSequenceNumber();
 					retBuff=buff;
 				}
 			if(retBuff==null){
 				for (Buffer buff : bufferpool)
+					if(!buff.isPinned() && buff.getModifiedBy()!= -1 && buff.getLogSequenceNumber()== -1){
+						leastLsn = buff.getLogSequenceNumber();
+						retBuff=buff;
+						break;
+					}
+			}
+			if(retBuff==null){
+				for (Buffer buff : bufferpool)
 					if(!buff.isPinned() && buff.getLogSequenceNumber()>-1 && buff.getLogSequenceNumber()<leastLsn){
 						leastLsn = buff.getLogSequenceNumber();
 						retBuff=buff;
+						
 					}
-
 			}
-
+			if(retBuff==null){
+				for (Buffer buff : bufferpool)
+					if(!buff.isPinned() && buff.getLogSequenceNumber()== -1){
+						leastLsn = buff.getLogSequenceNumber();
+						retBuff=buff;
+						break;
+					}
+			}
 		}
 		return retBuff;
 
 	}
-	
-	public void getStatistics() {
-		
-		StringBuilder builder = new StringBuilder();
-		for(int i=0; i<bufferpool.length; ++i) {
-			Buffer buffer = bufferpool[i];
+
+		public void getStatistics() {
 			
-			builder.append("For buffer number: ").append(i+1).append('\t').append("Reads: ").append(buffer.getReads())
-				.append('\t').append(" Writes: ").append(buffer.getWrites()).append('\n');
+			StringBuilder builder = new StringBuilder();
+			for(int i=0; i<bufferpool.length; ++i) {
+				Buffer buffer = bufferpool[i];
+				
+				builder.append("For buffer number: ").append(i+1).append('\t').append("Reads: ").append(buffer.getReads())
+					.append('\t').append(" Writes: ").append(buffer.getWrites()).append('\n');
+			}
+			System.out.println(builder.toString());
 		}
-		System.out.println(builder.toString());
-	}
 }
