@@ -176,15 +176,33 @@ class BasicBufferMgr {
 
 	}
 
-		public void getStatistics() {
+	public void getStatistics() {
+		
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<bufferpool.length; ++i) {
+			Buffer buffer = bufferpool[i];
 			
-			StringBuilder builder = new StringBuilder();
-			for(int i=0; i<bufferpool.length; ++i) {
-				Buffer buffer = bufferpool[i];
-				
-				builder.append("For buffer number: ").append(i+1).append('\t').append("Reads: ").append(buffer.getReads())
-					.append('\t').append(" Writes: ").append(buffer.getWrites()).append('\n');
-			}
-			System.out.println(builder.toString());
+			builder.append("For buffer number: ").append(i+1).append('\t').append("Reads: ").append(buffer.getReads())
+				.append('\t').append(" Writes: ").append(buffer.getWrites()).append('\n');
 		}
+		System.out.println(builder.toString());
+	}
+	
+	/**  
+	* Determines whether the map has a mapping from  
+	* the block to some buffer.  
+	* @paramblk the block to use as a key  
+	* @return true if there is a mapping; false otherwise  
+	*/  
+	boolean containsMapping(Block blk) {  
+		return bufferPoolMap.containsKey(blk);  
+	} 
+	/**  
+	* Returns the buffer that the map maps the specified block to.  
+	* @paramblk the block to use as a key  
+	* @return the buffer mapped to if there is a mapping; null otherwise  
+	*/  
+	Buffer getMapping(Block blk) {  
+		return bufferPoolMap.get(blk);  
+	}
 }
